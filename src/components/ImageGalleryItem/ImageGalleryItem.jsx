@@ -1,41 +1,28 @@
-import React, { Component } from 'react';
+import { useState, useEffect } from 'react';
+
 import {
   GalleryItemImage,
   GalleryItemWrapper,
 } from './ImageGalleryItem.styled';
 import PropTypes from 'prop-types';
 
-export default class ImageGalleryItem extends Component {
-  state = {
-    src: '',
-    alt: '',
+export default function ImageGalleryItem({
+  sendData,
+  openModal,
+  largeImg,
+  smallImg,
+  tags,
+}) {
+  const handleModalData = () => {
+    sendData({ largeImg, tags });
+    openModal();
   };
 
-  handleModalData = e => {
-    const { alt } = e.currentTarget;
-    this.setState(
-      {
-        src: this.props.largeImg,
-        alt,
-      },
-      () => {
-        this.props.openModal();
-        this.props.sendData(this.state);
-      }
-    );
-  };
-  render() {
-    const { smallImg, tags } = this.props;
-    return (
-      <GalleryItemWrapper>
-        <GalleryItemImage
-          onClick={this.handleModalData}
-          src={smallImg}
-          alt={tags}
-        />
-      </GalleryItemWrapper>
-    );
-  }
+  return (
+    <GalleryItemWrapper>
+      <GalleryItemImage onClick={handleModalData} src={smallImg} alt={tags} />
+    </GalleryItemWrapper>
+  );
 }
 
 ImageGalleryItem.propTypes = {

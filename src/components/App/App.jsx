@@ -61,13 +61,11 @@ export default class App extends Component {
     }));
   };
   handleModalInfo = data => {
+    console.log(data);
     if (data) {
-      const { src, alt } = data;
+      const { largeImg, tags } = data;
       this.setState({
-        modalComponents: {
-          src,
-          alt,
-        },
+        modalComponents: { src: largeImg, alt: tags },
       });
     }
   };
