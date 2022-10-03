@@ -1,4 +1,3 @@
-import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { ButtonWrapper } from './Button.styled';
 import { AiOutlineReload } from 'react-icons/ai';
