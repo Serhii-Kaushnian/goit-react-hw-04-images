@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import { useState, useEffect } from 'react';
 import Searchbar from 'components/Searchbar/Searchbar';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -10,124 +10,104 @@ import Loader from 'components/Loader/Loader';
 import Modal from 'components/Modal/Modal';
 import { AiOutlineCloseCircle } from 'react-icons/ai';
 import { ModalButton } from 'components/Modal/Modal.styled';
-export default class App extends Component {
-  APP_KEY = '8185021-24268e96be1b2c00462570825';
-  state = {
-    query: '',
-    hits: [],
-    totalHits: 0,
-    page: 1,
-    loader: false,
-    modalIisShown: false,
-    modalComponents: {
-      src: 'https://pixabay.com/get/gd53389845b169af23c624d89bd4d84d73b53ab4e93fea5efdadbd93768de75604e58472320ef2e98d8d658c0ec3e3662_640.jpg',
-      alt: 'cat',
-    },
-  };
-  async componentDidUpdate(_, prevState) {
-    if (
-      prevState.page !== this.state.page ||
-      prevState.query !== this.state.query
-    ) {
-      this.setState({
-        loader: true,
-      });
+
+export default function App() {
+  const APP_KEY = '8185021-24268e96be1b2c00462570825';
+  const [query, setQuery] = useState('');
+  const [hits, setHits] = useState([]);
+  const [totalHits, setTotalHits] = useState(0);
+  const [page, setPage] = useState(1);
+  const [loader, setLoader] = useState(false);
+  const [modalIsShown, setModalIsShown] = useState(false);
+  const [modalSrc, setModalSrc] = useState('');
+  const [modalAlt, setModalAlt] = useState('');
+
+  useEffect(() => {
+    if (query === '') {
+      return;
+    }
+    setLoader(true);
+    const getPictures = async params => {
       try {
         const response = await axios.get(
-          `https://pixabay.com/api/?q=${this.state.query}&page=${this.state.page}&key=${this.APP_KEY}&image_type=photo&orientation=horizontal&per_page=12`
+          `https://pixabay.com/api/?q=${query}&page=${page}&key=${APP_KEY}&image_type=photo&orientation=horizontal&per_page=12`
         );
+        setHits(prev => [...prev, ...response.data.hits]);
+        setLoader(false);
+        setTotalHits(response.data.totalHits);
 
-        this.setState(prev => {
-          return {
-            hits: [...prev.hits, ...response.data.hits],
-            loader: false,
-            totalHits: response.data.totalHits,
-          };
-        });
         if (response.data.hits.length === 0) {
-          toast.info(
-            `Search request ${this.state.query} is not found. Please  try again`
-          );
+          toast.info(`Search request ${query} is not found. Please  try again`);
           return;
         }
       } catch (error) {
         console.log(error);
       }
-    }
-  }
-  toogleModal = () => {
-    this.setState(({ modalIisShown }) => ({
-      modalIisShown: !modalIisShown,
-    }));
+    };
+
+    getPictures();
+  }, [page, query]);
+
+  const handleLoadMoreBtn = () => {
+    setPage(prev => prev + 1);
   };
-  handleModalInfo = data => {
-    console.log(data);
+
+  const handleSearchQuery = newQuery => {
+    if (newQuery !== query) {
+      setQuery(newQuery);
+      setPage(1);
+      setHits([]);
+      setModalIsShown(false);
+    } else {
+      toast.info(`Search request ${newQuery} is already chosen`);
+    }
+  };
+  const handleModalInfo = data => {
     if (data) {
       const { largeImg, tags } = data;
-      this.setState({
-        modalComponents: { src: largeImg, alt: tags },
-      });
+      setModalSrc(largeImg);
+      setModalAlt(tags);
     }
   };
-  handleSearchQuery = query => {
-    if (query !== this.state.query) {
-      this.setState({
-        query,
-        page: 1,
-        hits: [],
-        modalIisShown: false,
-      });
-    } else {
-      toast.info(`Search request ${query} is already chosen`);
-    }
-  };
-  handleLoadMoreBtn = () => {
-    this.setState(prev => {
-      return { page: prev.page + 1 };
-    });
+  const toogleModal = () => {
+    setModalIsShown(prev => !prev);
   };
 
-  render() {
-    const { hits, totalHits, loader, modalIisShown } = this.state;
-    return (
-      <AppWrapper>
-        <ToastContainer
-          position="top-left"
-          autoClose={5000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="colored"
+  return (
+    <AppWrapper>
+      <ToastContainer
+        position="top-left"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+      />
+
+      <Searchbar onSubmit={handleSearchQuery} />
+      {hits && (
+        <ImageGallery
+          hits={hits}
+          modalInfo={handleModalInfo}
+          modalHandler={toogleModal}
         />
-
-        <Searchbar onSubmit={this.handleSearchQuery} />
-        {hits && (
-          <ImageGallery
-            hits={hits}
-            modalInfo={this.handleModalInfo}
-            modalHandler={this.toogleModal}
-          />
-        )}
-        {loader && <Loader />}
-        {hits.length < totalHits && hits.length > 0 && (
-          <Button onClick={this.handleLoadMoreBtn} />
-        )}
-        {modalIisShown && (
-          <Modal onModalClose={this.toogleModal}>
-            <img
-              src={this.state.modalComponents.src}
-              alt={this.state.modalComponents.alt}
-            />
-            <ModalButton type="button" onClick={this.toogleModal}>
-              <AiOutlineCloseCircle />
-            </ModalButton>
-          </Modal>
-        )}
-      </AppWrapper>
-    );
-  }
+      )}
+      {loader && <Loader />}
+      {hits.length < totalHits && hits.length > 0 && (
+        <Button onClick={handleLoadMoreBtn} />
+      )}
+      {modalIsShown && (
+        <Modal onModalClose={toogleModal}>
+          <img src={modalSrc} alt={modalAlt} />
+          <ModalButton type="button" onClick={toogleModal}>
+            <AiOutlineCloseCircle />
+          </ModalButton>
+        </Modal>
+      )}
+    </AppWrapper>
+  );
 }
