@@ -12,11 +12,12 @@ export default function Searchbar({ onSubmit }) {
   };
   const handleFormSubmit = e => {
     e.preventDefault();
-    if (query.trim() === '') {
+    const trimedQuery = query.trim();
+    if (trimedQuery === '') {
       toast.info('Search field is empty');
       return;
     }
-    onSubmit(query);
+    onSubmit(trimedQuery);
     setQuery('');
   };
   return (
