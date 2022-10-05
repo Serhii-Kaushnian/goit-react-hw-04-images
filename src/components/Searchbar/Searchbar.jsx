@@ -18,7 +18,6 @@ export default function Searchbar({ onSubmit }) {
       return;
     }
     onSubmit(trimedQuery);
-    setQuery('');
   };
   return (
     <SearchbarWrapper>
